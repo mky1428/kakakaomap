@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Web Worker</title>
+
+        <script>
+            function clickBtn(){
+                var n = 0;
+                while(true){
+                    n++;
+                    document.getElementById('hh').innerHTML = n;
+                    //메인스레드가 반복문을 처리하느라고 화면에 그려낼 시간조차 없음 - 메인스레드가 어떤작업도 할 수없음 (ANR 에러)
+                }
+            }
+        </script>
+    </head>
+    
+    <body>
+        <!-- 무한반복문으로 카운트하는 버튼(워커없이 처리하므로 렉 걸림) -->
+        <button onclick="clickBtn()">무한반복</button>
+        <hr>
+        <h2 id="hh">결과</h2>
+        <hr>
+        <button onclick="clickBtn2()">start worker</button>
+        <button onclick="clickBtn3()">stop worker</button>
+
+        <!-- 메인스레드의 작업가능여부 테스트 -->
+        <button onclick="alert('clicked')">button</button>
+
+        <script>
+            var w;
+
+            function clickBtn2(){
+                //worker객체 생성 (별도 Thread - 코드를 읽어서 실행하는 녀석)
+                if(w==undefined){
+                    //워커는 객체를 만들면 자동 작업을 시작함 (Java처럼 .start 이런거 필요 없음)
+                    w = new Worker('./worker.js');   //워커가 작업할 코드는 별도의 .js에 작성함
+
+                    //워커가 UI작업을 위해 postMessage()로 전달할 데이터를 받았을 때 자동 발동하는 콜백메소드를 지정
+                    w.onmessage = function(message){
+                        document.getElementById('hh').innerHTML = message.data; 
+                    }             
+                }else{
+                    alert('이미 워커가 존재함');
+                }
+            }
+
+            function clickBtn3(){
+                w.terminate();
+                w = undefined;
+            }
+        </script>
+    </body>
+</html>
